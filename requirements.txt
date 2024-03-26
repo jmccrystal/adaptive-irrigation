@@ -1,0 +1,4 @@
+aiohttp==3.9.3
+pyrainbird==4.0.2
+Requests==2.31.0
+schedule==1.2.1
