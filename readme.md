@@ -4,10 +4,7 @@
 To get started with the Adaptive Rainbird Irrigation system, follow these steps:
 
 ### Download the Repository
-1. Go to the GitHub page of the project.
-2. Navigate to the 'Releases' section.
-3. Find the latest release and download the `.zip` file available under 'Assets'.
-4. Extract the contents of the zip file to a folder of your choice.
+Download the repository by clicking the "Code" button and then "Download ZIP" on the GitHub page. Extract the folder to your desired location.
 
 ### Configuration
 1. Inside the extracted folder, locate the `config.py` file.
