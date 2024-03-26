@@ -1,5 +1,7 @@
 import aiohttp
 import asyncio
+
+import pyrainbird.exceptions
 import schedule
 import time
 from datetime import datetime
@@ -11,36 +13,15 @@ from requests import HTTPError, RequestException
 from config import *
 
 
-base_irrigation_times = {
-    1: 10,
-    2: 6,
-    5: 15,
-    6: 7,
-    7: 13,
-}
+async def fetch_model_and_version():
+    # Create an aiohttp ClientSession
+    async with aiohttp.ClientSession() as session:
+        # Create an AsyncRainbirdController
+        controller = async_client.CreateController(session, RAINBIRD_IP, RAINBIRD_PASSWORD)
 
-zone_schedules = {
-    1: [("Mon", "Tue", "Thu", "Sat", "Sun"), ("05:50", "13:30")],
-    2: [("Tue", "Wed", "Thu", "Sun"), ("05:00", "10:00", "11:00", "14:00", "16:00")],
-    5: [("Mon", "Wed", "Thu", "Sat"), ("06:30", "10:30", "12:30")],
-    6: [("Mon", "Tue", "Wed", "Thu", "Sat", "Sun"), ("06:00", "09:00", "12:00")],
-    7: [("Mon", "Tue", "Thu", "Sat", "Sun"), ("11:30", "15:50")],
-}
-
-monthly_factors = {
-    1: 0.5,  # January
-    2: 0.5,  # February
-    3: 0.6,  # March
-    4: 0.7,  # April
-    5: 0.8,  # May
-    6: 1.0,  # June
-    7: 1.0,  # July
-    8: 1.0,  # August
-    9: 0.8,  # September
-    10: 0.7,  # October
-    11: 0.5,  # November
-    12: 0.5  # December
-}
+        # Fetch the model and version
+        model_and_version = await controller.get_model_and_version()
+        print(model_and_version)
 
 
 def get_past_rainfall_adjustment():
@@ -96,10 +77,14 @@ async def irrigate_zone(controller, zone, duration):
 
 
 async def scheduled_irrigation(zone, duration):
+    print("asdf")
     async with aiohttp.ClientSession() as client:
-        controller = async_client.CreateController(client, RAINBIRD_IP, RAINBIRD_PASSWORD)
-        print(f"Connected to Rainbird Controller for zone {zone}")
-        await irrigate_zone(controller, zone, duration)
+        try:
+            controller = async_client.CreateController(client, RAINBIRD_IP, RAINBIRD_PASSWORD)
+            print(f"Connected to Rainbird Controller for zone {zone}")
+            await irrigate_zone(controller, zone, duration)
+        except Exception as e:
+            print(f"Exception occurred while connecting to Rainbird controller: {e}")
 
 
 def schedule_irrigation():
@@ -111,7 +96,13 @@ def schedule_irrigation():
 
 
 if __name__ == "__main__":
+    try:
+        asyncio.run(fetch_model_and_version())
+    except pyrainbird.exceptions.RainbirdApiException as e:
+        print(f"Could not connect to Rainbird device: {e}")
+        exit(1)
     schedule_irrigation()
+    print("Irrigation scheduled. Press CTRL+C to exit.")
     while True:
         schedule.run_pending()
         time.sleep(60)  # Check every minute
